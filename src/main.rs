@@ -12,7 +12,7 @@ fn main() {
 
 #[allow(unused_assignments)]
 fn day1() -> (u32, u32) {
-    let input_file = File::open("./assets/aoc1.txt").unwrap();
+    let input_file = get_file(1);
     let mut reader = BufReader::new(input_file);
     let mut total: u32 = 0;
     let mut totals: Vec<u32> = Vec::new();
@@ -47,4 +47,9 @@ fn day1() -> (u32, u32) {
     let top_three_sum: u32 = top_three.iter().sum();
 
     (max,top_three_sum)
+}
+
+fn get_file(day: u8) -> File {
+    let path = format!("./assets/aoc{}.txt", day);
+    File::open(path).expect(&format!("No input file for day {}", day))
 }
