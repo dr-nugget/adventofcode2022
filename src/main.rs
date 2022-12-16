@@ -1,4 +1,4 @@
-use std::collections::BinaryHeap;
+use std::collections::{BinaryHeap, HashMap};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Seek, SeekFrom};
 
@@ -14,6 +14,12 @@ fn main() {
     println!("{}", day2_ans.0);
     println!("Day 2 answer 2:");
     println!("{}\n", day2_ans.1);
+
+    let day3_ans = day3();
+    println!("Day 3 answer 1:");
+    println!("{}", day3_ans.0);
+    println!("Day 3 answer 2:");
+    println!("{}\n", day3_ans.1);
 }
 
 #[allow(unused_assignments)]
@@ -68,7 +74,7 @@ fn day2() -> (u16, u16) {
                 "A" | "X" => rock,
                 "B" | "Y" => paper,
                 "C" | "Z" => scissors,
-                _ => panic!("Letter encountered that's not A-C or X-Z")
+                _ => panic!("Letter encountered that's not A-C or X-Z"),
             };
 
             vals.push(val);
@@ -77,31 +83,32 @@ fn day2() -> (u16, u16) {
         let my_move = vals[1];
         let their_move = vals[0];
 
-        score1 += my_move + if my_move == rock {
-            if their_move == rock {
-                tie
-            } else if their_move == paper {
-                loss
+        score1 += my_move
+            + if my_move == rock {
+                if their_move == rock {
+                    tie
+                } else if their_move == paper {
+                    loss
+                } else {
+                    win
+                }
+            } else if my_move == paper {
+                if their_move == rock {
+                    win
+                } else if their_move == paper {
+                    tie
+                } else {
+                    loss
+                }
             } else {
-                win
+                if their_move == rock {
+                    loss
+                } else if their_move == paper {
+                    win
+                } else {
+                    tie
+                }
             }
-        } else if my_move == paper {
-            if their_move == rock {
-                win
-            } else if their_move == paper {
-                tie
-            } else {
-                loss
-            }
-        } else {
-            if their_move == rock {
-                loss
-            } else if their_move == paper {
-                win
-            } else {
-                tie
-            }
-        }
     });
 
     let mut score2: u16 = 0;
@@ -112,13 +119,13 @@ fn day2() -> (u16, u16) {
         let mut vals = Vec::new();
         for letter in letters {
             let val = match letter {
-                "A"=> rock,
-                "B"=> paper,
-                "C"=> scissors,
+                "A" => rock,
+                "B" => paper,
+                "C" => scissors,
                 "X" => loss,
                 "Y" => tie,
                 "Z" => win,
-                _ => panic!("Letter encountered that's not A-C or X-Z")
+                _ => panic!("Letter encountered that's not A-C or X-Z"),
             };
 
             vals.push(val);
@@ -127,34 +134,79 @@ fn day2() -> (u16, u16) {
         let outcome = vals[1];
         let their_move = vals[0];
 
-        score2 += outcome + if outcome == loss {
-            if their_move == rock {
-                scissors
-            } else if their_move == paper {
-                rock
+        score2 += outcome
+            + if outcome == loss {
+                if their_move == rock {
+                    scissors
+                } else if their_move == paper {
+                    rock
+                } else {
+                    paper
+                }
+            } else if outcome == tie {
+                if their_move == rock {
+                    rock
+                } else if their_move == paper {
+                    paper
+                } else {
+                    scissors
+                }
             } else {
-                paper
+                if their_move == rock {
+                    paper
+                } else if their_move == paper {
+                    scissors
+                } else {
+                    rock
+                }
             }
-        } else if outcome == tie {
-            if their_move == rock {
-                rock
-            } else if their_move == paper {
-                paper
-            } else {
-                scissors
-            }
-        } else {
-            if their_move == rock {
-                paper
-            } else if their_move == paper {
-                scissors
-            } else {
-                rock
+    });
+
+    (score1, score2)
+}
+
+fn day3() -> (u16, u16) {
+    // Build the letters to value map
+    let letters = (b'a'..=b'z').chain(b'A'..=b'Z').map(char::from);
+    let zipped = letters.zip(1..=52);
+    let mut letters_map: HashMap<char, u16> = HashMap::new();
+    for (letter, priority) in zipped {
+        letters_map.insert(letter, priority);
+    }
+
+    let mut reader = BufReader::new(get_file(3));
+    let mut priority_sum1 = 0;
+    with_each_line(&mut reader, |buf| {
+        let buf = strip_newline(buf);
+        let (first_half, second_half) = buf.split_at(buf.len() / 2);
+        assert_eq!(first_half.len(), second_half.len()); // Sanity check
+        for letter in first_half.chars() {
+            if second_half.contains(letter) {
+                priority_sum1 += letters_map[&letter];
+                break;
             }
         }
     });
 
-    (score1, score2)
+    _ = reader.seek(SeekFrom::Start(0));
+
+    let mut group = Vec::new();
+    let mut priority_sum2 = 0;
+    with_each_line(&mut reader, |buf| {
+        let buf = strip_newline(buf);
+        group.push(buf);
+        if group.len() == 3 {
+            for letter in group[0].chars() {
+                if group[1].contains(letter) && group[2].contains(letter) {
+                    priority_sum2 += letters_map[&letter];
+                    break;
+                }
+            }
+            group.clear();
+        }
+    }); 
+
+    (priority_sum1, priority_sum2)
 }
 
 fn get_file(day: u8) -> File {
@@ -174,4 +226,8 @@ where
         }
         func(buf);
     }
+}
+
+fn strip_newline(string: &mut String) -> String {
+    string.strip_suffix("\n").unwrap().to_string()
 }
