@@ -34,12 +34,12 @@ fn day1() -> (u32, u32) {
             totals.push(total);
             total = 0;
         } else {
-            let buf = buf.strip_suffix("\n").unwrap().to_string();
+            let buf = buf.strip_suffix('\n').unwrap().to_string();
             total += buf.parse::<u32>().unwrap();
         }
     });
 
-    let max = **(&totals.iter().max().unwrap());
+    let max = *totals.iter().max().unwrap();
 
     // Use the std max-order BinaryHeap to get 3 highest values
     let mut heap = BinaryHeap::new();
@@ -66,7 +66,7 @@ fn day2() -> (u16, u16) {
     let mut reader = BufReader::new(get_file(2));
     let mut score1: u16 = 0;
     with_each_line(&mut reader, |buf| {
-        let buf = &mut buf.strip_suffix("\n").unwrap().to_string();
+        let buf = &mut buf.strip_suffix('\n').unwrap().to_string();
         let letters: Vec<&str> = buf.split(' ').collect();
         let mut vals = Vec::new();
         for letter in letters {
@@ -100,21 +100,19 @@ fn day2() -> (u16, u16) {
                 } else {
                     loss
                 }
+            } else if their_move == rock {
+                loss
+            } else if their_move == paper {
+                win
             } else {
-                if their_move == rock {
-                    loss
-                } else if their_move == paper {
-                    win
-                } else {
-                    tie
-                }
+                tie
             }
     });
 
     let mut score2: u16 = 0;
     _ = reader.seek(SeekFrom::Start(0));
     with_each_line(&mut reader, |buf| {
-        let buf = &mut buf.strip_suffix("\n").unwrap().to_string();
+        let buf = &mut buf.strip_suffix('\n').unwrap().to_string();
         let letters: Vec<&str> = buf.split(' ').collect();
         let mut vals = Vec::new();
         for letter in letters {
@@ -151,14 +149,12 @@ fn day2() -> (u16, u16) {
                 } else {
                     scissors
                 }
+            } else if their_move == rock {
+                paper
+            } else if their_move == paper {
+                scissors
             } else {
-                if their_move == rock {
-                    paper
-                } else if their_move == paper {
-                    scissors
-                } else {
-                    rock
-                }
+                rock
             }
     });
 
@@ -204,14 +200,14 @@ fn day3() -> (u16, u16) {
             }
             group.clear();
         }
-    }); 
+    });
 
     (priority_sum1, priority_sum2)
 }
 
 fn get_file(day: u8) -> File {
     let path = format!("./assets/aoc{}.txt", day);
-    File::open(path).expect(&format!("No input file for day {}", day))
+    File::open(path).unwrap_or_else(|_| panic!("No input file for day {}", day))
 }
 
 fn with_each_line<F>(reader: &mut BufReader<File>, mut func: F)
@@ -228,6 +224,6 @@ where
     }
 }
 
-fn strip_newline(string: &mut String) -> String {
-    string.strip_suffix("\n").unwrap().to_string()
+fn strip_newline(string: &mut str) -> String {
+    string.strip_suffix('\n').unwrap().to_string()
 }
